@@ -36,6 +36,16 @@
   .card.edmund { box-shadow:0 0 0 0 #4f8ef7; } .card.edmund .nm{ color:#8fb8ff; }
   .card.matthew .nm{ color:#ff9d8f; }
   #best { font-size:13px; opacity:.7; }
+  #levelSel { display:flex; align-items:center; gap:14px; margin-top:4px; }
+  .lvlBtn {
+    width:46px; height:46px; border:none; border-radius:14px; cursor:pointer;
+    background:rgba(255,255,255,.18); color:#fff; font-size:26px; font-weight:bold;
+    font-family:inherit; display:flex; align-items:center; justify-content:center;
+  }
+  .lvlBtn:active { background:rgba(255,255,255,.4); transform:scale(.92); }
+  .lvlBtn:disabled { opacity:.3; }
+  #lvlLabel { font-size:20px; font-weight:bold; min-width:92px; text-align:center; }
+  #lvlFoes { font-size:15px; opacity:.85; letter-spacing:2px; min-height:20px; }
   .howto { font-size:13px; opacity:.75; max-width:330px; line-height:1.5; }
 
   /* ---------- game ---------- */
@@ -104,6 +114,12 @@
       <div class="nm">Matthew</div>
     </div>
   </div>
+  <div id="levelSel">
+    <button class="lvlBtn" id="lvlMinus">−</button>
+    <div id="lvlLabel">Level 1</div>
+    <button class="lvlBtn" id="lvlPlus">+</button>
+  </div>
+  <div id="lvlFoes"></div>
   <p class="howto">Swipe on the maze (or use the arrows) to run.<br>
   Watch out for the other brother, the budgies 🐦 and the Shiba Inus 🐕!</p>
   <div id="best"></div>
@@ -250,9 +266,9 @@ function levelConfig(lv) {
 
 function makeEnemy(type, cx, cy, spd, rivalName) {
   const base = {
-    rival:  { speed: 2.6 * spd, rand: 0.06, name: rivalName },
-    shiba:  { speed: 2.2 * spd, rand: 0.25, name: 'the Shiba Inu' },
-    budgie: { speed: 2.9 * spd, rand: 0.35, name: 'the budgie' },
+    rival:  { speed: 1.74 * spd, rand: 0.06, name: rivalName },
+    shiba:  { speed: 1.47 * spd, rand: 0.25, name: 'the Shiba Inu' },
+    budgie: { speed: 1.94 * spd, rand: 0.35, name: 'the budgie' },
   }[type];
   return {
     type, x: cx + 0.5, y: cy + 0.5,
@@ -659,11 +675,28 @@ wrap.addEventListener('touchmove', ev => {
 document.addEventListener('touchmove', ev => ev.preventDefault(), { passive: false });
 
 /* ================= wiring ================= */
+let startLv = 1;
+const LV_MAX = 20;
+const FOE_ICONS = { rival: '👦', shiba: '🐕', budgie: '🐦' };
+function updateLevelSel() {
+  $('#lvlLabel').textContent = 'Level ' + startLv;
+  $('#lvlFoes').textContent = levelConfig(startLv).foes.map(f => FOE_ICONS[f.type]).join(' ');
+  $('#lvlMinus').disabled = startLv <= 1;
+  $('#lvlPlus').disabled = startLv >= LV_MAX;
+}
+$('#lvlMinus').addEventListener('click', () => {
+  if (startLv > 1) { startLv--; tone(440, .06); updateLevelSel(); }
+});
+$('#lvlPlus').addEventListener('click', () => {
+  if (startLv < LV_MAX) { startLv++; tone(550, .06); updateLevelSel(); }
+});
+updateLevelSel();
+
 document.querySelectorAll('.card').forEach(card => {
   card.addEventListener('click', () => {
     hero = card.dataset.hero;
     tone(660, .08); // unlock audio on user gesture
-    startLevel(1);
+    startLevel(startLv);
   });
 });
 $('#ovMenu').addEventListener('click', () => {
